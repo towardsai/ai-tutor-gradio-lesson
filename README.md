@@ -1,3 +1,13 @@
+---
+title: AI Tutor
+emoji: 💡
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+sdk_version: "4.44.1"
+app_file: app.py
+pinned: false
+---
 # Building and Deploying a Gradio UI on Hugging Face Spaces
 
 ## Overview
