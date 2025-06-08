@@ -20,7 +20,7 @@ This repository contains the code of the "Building and Deploying a Gradio UI on 
 1. Clone the repository.
 
 ```bash
-git clone git@github.com:towardsai/ai-tutor-gradio-lesson.git
+git clone git@github.com:jaiganesan/AI_Tutor_Chatbot.git
 cd ai-tutor-gradio-lesson
 ```
 
