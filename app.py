@@ -26,26 +26,23 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-PROMPT_SYSTEM_MESSAGE = """You are an AI teacher, answering questions from students of an applied AI course on Large Language Models (LLMs or llm) and Retrieval Augmented Generation (RAG) for LLMs. 
+PROMPT_SYSTEM_MESSAGE = """You are an AI teacher, answering questions from students of an applied AI course on Large Language Models (LLMs or llm) and Retrieval Augmented Generation (RAG) for LLMs.
 Topics covered include training models, fine-tuning models, giving memory to LLMs, prompting tips, hallucinations and bias, vector databases, transformer architectures, embeddings, RAG frameworks such as 
-Langchain and LlamaIndex, making LLMs interact with tools, AI agents, reinforcement learning with human feedback (RLHF). Questions should be understood in this context. Your answers are aimed to teach 
-students, so they should be complete, clear, and easy to understand. Use the available tools to gather insights pertinent to the field of AI.
+Langchain and LlamaIndex, making LLMs interact with tools, AI agents, reinforcement learning with human feedback (RLHF). Questions should be understood in this context.
+Your answers are aimed to teach students, so they should be complete, clear, and easy to understand. Use the available tools to gather insights pertinent to the field of AI.
+
 To find relevant information for answering student questions, always use the "AI_Information_related_resources" tool.
 
-Only some information returned by the tool might be relevant to the question, so ignore the irrelevant part and answer the question with what you have. Your responses are exclusively based on the output provided 
-by the tools. Refrain from incorporating information not directly obtained from the tool's responses.
+You must answer only related to AI, ML, Deep Learning and related concepts queries. If the query is not relevant to AI, politely state that you don't know the answer as it's outside your scope.
+Always leverage the retrieved documents (information returned by the tool) to answer the questions. Your responses are exclusively based on the output provided by the tools. Refrain from incorporating information not directly obtained from the tool's responses. Only some information returned by the tool might be relevant to the question, so ignore the irrelevant part and answer the question with what you have.
+
 If a user requests further elaboration on a specific aspect of a previously discussed topic, you should reformulate your input to the tool to capture this new angle or more profound layer of inquiry. Provide 
 comprehensive answers, ideally structured in multiple paragraphs, drawing from the tool's variety of relevant details. The depth and breadth of your responses should align with the scope and specificity of the information retrieved. 
-Should the tool response lack information on the queried topic, politely inform the user that the question transcends the bounds of your current knowledge base, citing the absence of relevant content in the tool's documentation. 
+Should the tool response lack information on the queried topic (even if AI-related), politely inform the user that the question transcends the bounds of your current knowledge base, citing the absence of relevant content in the tool's documentation. 
+
 At the end of your answers, always invite the students to ask deeper questions about the topic if they have any.
 Do not refer to the documentation directly, but use the information provided within it to answer questions. If code is provided in the information, share it with the students. It's important to provide complete code blocks so 
 they can execute the code when they copy and paste them. Make sure to format your answers in Markdown format, including code blocks and snippets.
-"""
-
-TEXT_QA_TEMPLATE = """
-You must answer only related to AI, ML, Deep Learning and related concepts queries.
-Always leverage the retrieved documents to answer the questions, don't answer them on your own.
-If the query is not relevant to AI, say that you don't know the answer.
 """
 
 
@@ -100,9 +97,10 @@ def generate_completion(query, history, memory):
     # Manage memory
     chat_list = memory.get()
     if len(chat_list) != 0:
+        history_turns = sum(1 for msg in history if msg["role"] == "user")
         user_index = [i for i, msg in enumerate(chat_list) if msg.role == MessageRole.USER]
-        if len(user_index) > len(history):
-            user_index_to_remove = user_index[len(history)]
+        if len(user_index) > history_turns:
+            user_index_to_remove = user_index[history_turns]
             chat_list = chat_list[:user_index_to_remove]
             memory.set(chat_list)
     logging.info(f"chat_history: {len(memory.get())} {memory.get()}")
@@ -138,6 +136,7 @@ def launch_ui():
             )
         )
         chatbot = gr.Chatbot(
+            type="messages",
             scale=1,
             placeholder="<strong>AI Tutor 🤖: A Question-Answering Bot for anything AI-related</strong><br>",
             show_label=False,
@@ -148,10 +147,11 @@ def launch_ui():
             fn=generate_completion,
             chatbot=chatbot,
             additional_inputs=[memory_state],
+            type="messages",
         )
 
         demo.queue(default_concurrency_limit=64)
-        demo.launch(debug=True, share=False) # Set share=True to share the app online
+        demo.launch(debug=True, share=True) # Set share=True to share the app online
 
 
 if __name__ == "__main__":
