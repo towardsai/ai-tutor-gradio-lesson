@@ -13,10 +13,11 @@ git clone git@github.com:towardsai/ai-tutor-gradio-lesson.git
 cd ai-tutor-gradio-lesson
 ```
 
-2. Create a `.env` file and add there your OpenAI API key. Its content should be something like:
+2. Create a `.env` file and add there your OpenAI API key and Huggingface token. Its content should be something like:
 
 ```bash
 OPENAI_API_KEY="sk-..."
+HF_TOKEN="hf_..."
 ```
 
 3. Create a local virtual environment, for example using the `venv` module. Then, activate it.
