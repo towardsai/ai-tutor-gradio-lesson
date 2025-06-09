@@ -17,7 +17,7 @@ cd ai-tutor-gradio-lesson
 
 ```bash
 OPENAI_API_KEY="sk-..."
-HF_TOKEN="..."
+HF_TOKEN="hf_..."
 ```
 
 3. Create a local virtual environment, for example using the `venv` module. Then, activate it.
