@@ -40,12 +40,12 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 # Provider selection — the same values as the course setup cells. Override via
 # environment variables (e.g. in the Space settings) without touching code.
 # --------------------------------------------------------------------------- #
-CHAT_MODEL_FOR = {"gemini": "gemini-3.7-flash", "openai": "gpt-5.6-luna", "anthropic": "claude-sonnet-5"}
+CHAT_MODEL_FOR = {"gemini": "gemini-3.7-flash", "openai": "gpt-5.6-luna"}
 EMBED_MODEL_FOR = {"gemini": "gemini-embedding-001", "openai": "text-embedding-3-small"}
-KEY_FOR = {"gemini": "GOOGLE_API_KEY", "openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY"}
+KEY_FOR = {"gemini": "GOOGLE_API_KEY", "openai": "OPENAI_API_KEY"}
 
-PROVIDER = os.getenv("PROVIDER", "gemini")              # "gemini" | "openai" | "anthropic"
-EMBED_PROVIDER = os.getenv("EMBED_PROVIDER", "gemini")  # "gemini" | "openai" (Anthropic has no embedding API)
+PROVIDER = os.getenv("PROVIDER", "gemini")              # "gemini" | "openai"
+EMBED_PROVIDER = os.getenv("EMBED_PROVIDER", "gemini")  # "gemini" | "openai"
 CHAT_MODEL = os.getenv("CHAT_MODEL", CHAT_MODEL_FOR[PROVIDER])
 EMBED_MODEL = os.getenv("EMBED_MODEL", EMBED_MODEL_FOR[EMBED_PROVIDER])
 REQUIRED_KEYS = sorted({KEY_FOR[PROVIDER], KEY_FOR[EMBED_PROVIDER]})
@@ -161,15 +161,26 @@ class TutorMemory:
         ]
 
     def sync_with(self, history):
-        """Keep memory in step with the visible Gradio history (edits, retries,
-        clears) — the same reconciliation the old app did against its buffer."""
-        history_turns = sum(1 for m in history if m["role"] == "user")
+        """Keep memory in step with the visible Gradio history — the UI is the
+        source of truth. A shorter history (edit, retry, clear) truncates
+        memory, exactly as the old app reconciled its buffer; a longer one
+        (a conversation restored from the saved-history panel) is adopted as
+        the transcript."""
+        visible = [
+            {"role": m["role"], "content": m["content"]}
+            for m in history
+            if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
+        ]
+        history_turns = sum(1 for m in visible if m["role"] == "user")
         user_indexes = [i for i, m in enumerate(self.messages) if m["role"] == "user"]
-        if len(user_indexes) > history_turns:
+        if len(user_indexes) > history_turns:    # the UI went back: truncate
             cut = user_indexes[history_turns]
             self.messages = self.messages[:cut]
             if self._folded > len(self.messages):  # the summary covered removed turns
                 self._summary, self._folded = "", 0
+        elif len(user_indexes) < history_turns:  # a restored conversation: adopt it
+            self.messages = visible
+            self._summary, self._folded = "", 0
 
 
 # --------------------------------------------------------------------------- #
@@ -225,15 +236,6 @@ def stream_reply(messages, system=None):
             if event.type == "response.output_text.delta":
                 yield event.delta
 
-    elif PROVIDER == "anthropic":
-        import anthropic
-
-        with anthropic.Anthropic().messages.stream(
-            model=CHAT_MODEL, max_tokens=4096, system=system,
-            messages=[{"role": "user", "content": prompt}],
-        ) as stream:
-            yield from stream.text_stream
-
     else:
         # Any other provider is configured through the toolkit
         # (OpenAI-compatible endpoints); fall back to one non-streamed call.
@@ -244,6 +246,8 @@ def generate_completion(query, history, memory):
     """One chat turn, called by gr.ChatInterface with the visible history and
     the per-session TutorMemory from gr.State."""
     logging.info(f"User query: {query}")
+    if memory is None:  # an example click passes no memory; history sync rebuilds context
+        memory = TutorMemory()
     memory.sync_with(history)
 
     last_exchange = "\n".join(f"{m['role']}: {m['content'][:200]}" for m in memory.messages[-2:])
@@ -280,6 +284,14 @@ def generate_completion(query, history, memory):
     memory.record(query, answer)  # ...and only the question goes in the transcript
 
 
+EXAMPLE_QUESTIONS = [
+    "What is Retrieval Augmented Generation, and when do I need it?",
+    "How does LoRA fine-tuning work?",
+    "When does BM25 beat dense retrieval?",
+    "How do I evaluate whether my RAG pipeline actually improved?",
+]
+
+
 def launch_ui():
     with gr.Blocks(
         fill_height=True,
@@ -289,9 +301,21 @@ def launch_ui():
 
         memory_state = gr.State(TutorMemory)  # one TutorMemory per session
 
+        gr.Markdown(
+            "# 🤖 AI Tutor\n"
+            "Ask anything about LLMs, RAG, fine-tuning, or agents — answers are "
+            "grounded in the course knowledge base (788 documents, 7 sources) "
+            "and stream in as they are generated."
+        )
+
         chatbot = gr.Chatbot(
             scale=1,
-            placeholder="<strong>AI Tutor 🤖: A Question-Answering Bot for anything AI-related</strong><br>",
+            placeholder=(
+                "<strong>Welcome! 👋</strong><br>"
+                "I answer with retrieved excerpts from the course corpus: "
+                "LangChain, LangGraph, OpenAI and Claude Code docs, and more.<br>"
+                "Pick an example below, or ask your own question."
+            ),
             show_label=False,
             buttons=["copy"],
         )
@@ -300,10 +324,16 @@ def launch_ui():
             fn=generate_completion,
             chatbot=chatbot,
             additional_inputs=[memory_state],
+            examples=[[q, None] for q in EXAMPLE_QUESTIONS],
+            save_history=True,  # previous conversations, kept in the browser
         )
 
     demo.queue(default_concurrency_limit=64)
-    demo.launch(debug=False, share=False)  # set share=True for a temporary public link
+    demo.launch(
+        theme=gr.themes.Soft(primary_hue="indigo"),  # Gradio 6: theme is set at launch
+        debug=False,
+        share=False,  # set share=True for a temporary public link
+    )
 
 
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ cd AI_Tutor_Chatbot
 GOOGLE_API_KEY="..."
 ```
 
-Only needed if you switch providers: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`.
+Only needed if you switch providers: `OPENAI_API_KEY`.
 
 3. Create a virtual environment with **Python 3.12 or newer** (the `tai-aitutor` toolkit requires it), then activate it.
 
@@ -62,9 +62,9 @@ The app follows the course's provider convention (Gemini default). Override via 
 
 | Variable | Default | Options |
 |---|---|---|
-| `PROVIDER` | `gemini` | `gemini`, `openai`, `anthropic` |
-| `CHAT_MODEL` | `gemini-3.7-flash` | `gpt-5.6-luna`, `claude-sonnet-5`, or any newer model id |
-| `EMBED_PROVIDER` | `gemini` | `gemini`, `openai` (Anthropic has no embedding API) |
+| `PROVIDER` | `gemini` | `gemini`, `openai` |
+| `CHAT_MODEL` | `gemini-3.7-flash` | `gpt-5.6-luna`, or any newer model id |
+| `EMBED_PROVIDER` | `gemini` | `gemini`, `openai` |
 | `EMBED_MODEL` | `gemini-embedding-001` | `text-embedding-3-small` |
 
 Each embedding provider has its own prebuilt store (same corpus, same chunks); the app downloads the one matching `EMBED_PROVIDER`.
