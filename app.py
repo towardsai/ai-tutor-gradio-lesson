@@ -35,6 +35,7 @@ from tai_aitutor import (
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("google_genai").setLevel(logging.WARNING)  # hide the per-call "AFC is enabled" info line
 
 # --------------------------------------------------------------------------- #
 # Provider selection — the same values as the course setup cells. Override via
@@ -327,6 +328,7 @@ def launch_ui():
             chatbot=chatbot,
             additional_inputs=[memory_state],
             examples=[[q, None] for q in EXAMPLE_QUESTIONS],
+            cache_examples=False,  # run starters live on click — Spaces otherwise pre-runs them at startup
             save_history=True,  # previous conversations, kept in the browser
         )
 
