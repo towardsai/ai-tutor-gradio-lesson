@@ -51,7 +51,7 @@ EMBED_MODEL = os.getenv("EMBED_MODEL", EMBED_MODEL_FOR[EMBED_PROVIDER])
 REQUIRED_KEYS = sorted({KEY_FOR[PROVIDER], KEY_FOR[EMBED_PROVIDER]})
 
 PROMPT_SYSTEM_MESSAGE = """You are an AI teacher, answering questions from students of an applied AI course on Large Language Models (LLMs or llm) and Retrieval Augmented Generation (RAG) for LLMs.
-Topics covered include training models, fine-tuning models, giving memory to LLMs, prompting tips, hallucinations and bias, vector databases, transformer architectures, embeddings, retrieval augmented generation, making LLMs interact with tools, AI agents, reinforcement learning with human feedback (RLHF). Questions should be understood in this context.
+Topics covered include LLM APIs (OpenAI, Gemini), agent frameworks (LangChain, LangGraph, LlamaIndex, Deep Agents), Claude Code, building and deploying AI agents, MCP servers and tool use, retrieval augmented generation, giving memory to LLMs and agents, prompting tips, embeddings and vector databases, and fine-tuning models. Questions should be understood in this context.
 Your answers are aimed to teach students, so they should be complete, clear, and easy to understand.
 
 You must answer only questions related to AI, ML, Deep Learning and related concepts. If the query is not relevant to AI, politely state that you don't know the answer as it's outside your scope.
@@ -284,11 +284,12 @@ def generate_completion(query, history, memory):
     memory.record(query, answer)  # ...and only the question goes in the transcript
 
 
+# Starter questions, each grounded in the current corpus (verified against its sources)
 EXAMPLE_QUESTIONS = [
-    "What is Retrieval Augmented Generation, and when do I need it?",
-    "How does LoRA fine-tuning work?",
-    "When does BM25 beat dense retrieval?",
-    "How do I evaluate whether my RAG pipeline actually improved?",
+    "How do I build an agent with LangGraph, and how does it keep state?",
+    "What is an MCP server, and how do I connect one?",
+    "How do I give an AI agent memory across a long conversation?",
+    "What's new in LangChain v1?",
 ]
 
 
@@ -303,17 +304,18 @@ def launch_ui():
 
         gr.Markdown(
             "# 🤖 AI Tutor\n"
-            "Ask anything about LLMs, RAG, fine-tuning, or agents — answers are "
-            "grounded in the course knowledge base (788 documents, 7 sources) "
-            "and stream in as they are generated."
+            "Ask anything about LLM APIs, agent frameworks, Claude Code, RAG, or "
+            "agent engineering — answers are grounded in the course knowledge base "
+            "(788 documents) and stream in as they are generated."
         )
 
         chatbot = gr.Chatbot(
             scale=1,
             placeholder=(
                 "<strong>Welcome! 👋</strong><br>"
-                "I answer with retrieved excerpts from the course corpus: "
-                "LangChain, LangGraph, OpenAI and Claude Code docs, and more.<br>"
+                "I answer with excerpts retrieved from the course corpus: LangChain, "
+                "LangGraph, LlamaIndex, OpenAI, Claude Code and Deep Agents "
+                "documentation, plus the course's agent-engineering lessons.<br>"
                 "Pick an example below, or ask your own question."
             ),
             show_label=False,
@@ -330,7 +332,7 @@ def launch_ui():
 
     demo.queue(default_concurrency_limit=64)
     demo.launch(
-        theme=gr.themes.Soft(primary_hue="indigo"),  # Gradio 6: theme is set at launch
+        theme=gr.themes.Default(primary_hue="indigo"),  # Gradio 6: theme is set at launch
         debug=False,
         share=False,  # set share=True for a temporary public link
     )

@@ -18,7 +18,7 @@ datasets:
 
 This repository contains the code of the "Building and Deploying a Gradio UI on Hugging Face Spaces" lesson of the "From Beginner to Advanced LLM Developer" course.
 
-The app is the deployable version of the RAG AI Tutor built across the course notebooks: it loads a prebuilt Chroma vector store of the course knowledge base (788 documents, 7,428 chunks) from the [course dataset](https://huggingface.co/datasets/towardsai-tutors/full-stack-ai-engineering-data), retrieves and generates with [`tai-aitutor`](https://pypi.org/project/tai-aitutor/) (the course toolkit), keeps conversational memory with the hand-rolled summary strategy from the Section 9 memory lesson, and streams answers into a Gradio chat UI.
+The app is the deployable version of the RAG AI Tutor built across the course notebooks: it loads a prebuilt Chroma vector store of the course knowledge base — 788 documents (7,428 chunks) of LangChain, LangGraph, LlamaIndex, OpenAI, Claude Code and Deep Agents documentation plus the course's agent-engineering lessons — from the [course dataset](https://huggingface.co/datasets/towardsai-tutors/full-stack-ai-engineering-data), retrieves and generates with [`tai-aitutor`](https://pypi.org/project/tai-aitutor/) (the course toolkit), keeps conversational memory with the hand-rolled summary strategy from the Section 9 memory lesson, and streams answers into a Gradio chat UI.
 
 ## Setup
 
