@@ -336,7 +336,7 @@ def launch_ui():
     demo.launch(
         theme=gr.themes.Default(primary_hue="indigo"),  # Gradio 6: theme is set at launch
         debug=False,
-        share=False,  # set share=True for a temporary public link
+        share=True,  # set share=True for a temporary public link
     )
 
 

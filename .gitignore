@@ -1,9 +1,34 @@
+# Environments
 .env
+.env.*
+!.env.example
 venv/
 .venv/
+env/
+
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Gradio
 .gradio/
-prebuilt_stores/
-*.zip
-ai_tutor_knowledge.jsonl
+flagged/
+
+# Data & vector stores
 data/
+prebuilt_stores/
+chroma_db/
+ai_tutor_knowledge.jsonl
+*.zip
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+
+.env
+ai_tutor_knowledge-gemini-embedding-001-1536d-norm-0e801a3f.zip
