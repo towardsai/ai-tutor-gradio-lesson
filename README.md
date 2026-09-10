@@ -3,10 +3,8 @@ title: AI Tutor
 emoji: 💡
 colorFrom: blue
 colorTo: indigo
-sdk: gradio
-sdk_version: "6.26.0"
-python_version: "3.12"
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 datasets:
   - towardsai-tutors/full-stack-ai-engineering-data
@@ -25,8 +23,8 @@ The app is the deployable version of the RAG AI Tutor built across the course no
 1. Clone the repository.
 
 ```bash
-git clone git@github.com:jaiganesan-n/AI_Tutor_Chatbot.git
-cd AI_Tutor_Chatbot
+git clone git@github.com:your-username/ai-tutor-gradio-lesson.git
+cd ai-tutor-gradio-lesson
 ```
 
 2. Create a `.env` file with your Gemini API key (the course-default provider):
@@ -63,7 +61,7 @@ The app follows the course's provider convention (Gemini default). Override via 
 | Variable | Default | Options |
 |---|---|---|
 | `PROVIDER` | `gemini` | `gemini`, `openai` |
-| `CHAT_MODEL` | `gemini-3.7-flash` | `gpt-5.6-luna`, or any newer model id |
+| `CHAT_MODEL` | `gemini-3.8-flash` | `gpt-5.6-luna`, or any newer model id |
 | `EMBED_PROVIDER` | `gemini` | `gemini`, `openai` |
 | `EMBED_MODEL` | `gemini-embedding-001` | `text-embedding-3-small` |
 
@@ -71,10 +69,13 @@ Each embedding provider has its own prebuilt store (same corpus, same chunks); t
 
 ## Deploying on Hugging Face Spaces
 
-- The YAML header at the top of this README is the Space configuration. `python_version: "3.12"` is required — Spaces default to Python 3.10, and the `tai-aitutor` install fails there.
-- Set `GOOGLE_API_KEY` (and any optional provider keys) as **Secrets** in the Space settings — never commit keys.
-- `.github/workflows/main.yml` syncs every push on `main` to the Space (requires an `HF_TOKEN` secret in the GitHub repository settings).
-- The free CPU tier is enough: models are called via APIs, and the store download (~100 MB per cold start) fits comfortably in the Space's ephemeral disk.
+The app deploys as a **Docker Space**, which is how the production tutor ships.
+
+- The YAML header at the top of this README is the Space configuration. `sdk: docker` tells the Space to build the `Dockerfile` rather than install the Gradio SDK, and `app_port: 7860` is the port it serves on.
+- The `Dockerfile` pins Python 3.12 (the `tai-aitutor` floor), installs `requirements.txt`, runs as user 1000, which is the uid a Space container gets, and sets `GRADIO_SERVER_NAME=0.0.0.0` so Gradio listens on the container's interface instead of localhost.
+- Set `GOOGLE_API_KEY` as a **Secret** in the Space settings — never commit keys. A Docker Space injects secrets and variables into the container environment at runtime, so `os.getenv` reads them unchanged. `PROVIDER` and `EMBED_PROVIDER` belong under **Variables**, which are public.
+- `.github/workflows/main.yml` pushes every merge on `main` to a private dev Space, and promotes the same commit to the public production Space when you run the workflow by hand from the Actions tab. Both jobs need an `HF_TOKEN` secret in the GitHub repository settings, and both Space paths carry a `your-username` placeholder to replace with the account that owns them.
+- The free CPU Basic hardware is enough: models are called via APIs, and the store download (~100 MB per cold start) fits comfortably in the Space's ephemeral disk. Creating a Space that runs on compute, Docker included, needs a paid plan on the account that creates it.
 
 ## Rebuilding the vector store with your own data
 

@@ -1,0 +1,17 @@
+# Keep the build context small: the store is downloaded at startup, not shipped.
+.git
+.github
+.venv
+venv
+env
+prebuilt_stores/
+chroma_db/
+ai_tutor_knowledge.jsonl
+*.zip
+.env
+.env.*
+.gradio/
+flagged/
+__pycache__/
+*.py[cod]
+.DS_Store

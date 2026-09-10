@@ -1,20 +1,36 @@
-name: Sync to Hugging Face hub
+name: Sync to Hugging Face Spaces
+
 on:
+  # every merge to main goes to the private dev Space
   push:
     branches: [main]
 
-  # to run this workflow manually from the Actions tab
+  # promotion to the public production Space is manual, from the Actions tab
   workflow_dispatch:
 
 jobs:
-  sync-to-hub:
+  sync-to-dev:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           lfs: true
-      - name: Push to hub
+      - name: Push to the dev Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/jaiganesan/AI_Tutor_Chatbot main
+        run: git push https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/your-username/AI_Tutor_Chatbot-dev main
+
+  promote-to-prod:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to the production Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/your-username/AI_Tutor_Chatbot main

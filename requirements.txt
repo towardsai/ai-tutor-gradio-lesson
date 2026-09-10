@@ -13,3 +13,4 @@ requests==2.34.2
 
 # used by scripts/build_vector_store.py
 numpy
+python-dotenv

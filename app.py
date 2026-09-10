@@ -41,7 +41,7 @@ logging.getLogger("google_genai").setLevel(logging.WARNING)  # hide the per-call
 # Provider selection — the same values as the course setup cells. Override via
 # environment variables (e.g. in the Space settings) without touching code.
 # --------------------------------------------------------------------------- #
-CHAT_MODEL_FOR = {"gemini": "gemini-3.7-flash", "openai": "gpt-5.6-luna"}
+CHAT_MODEL_FOR = {"gemini": "gemini-3.8-flash", "openai": "gpt-5.6-luna"}
 EMBED_MODEL_FOR = {"gemini": "gemini-embedding-001", "openai": "text-embedding-3-small"}
 KEY_FOR = {"gemini": "GOOGLE_API_KEY", "openai": "OPENAI_API_KEY"}
 
@@ -217,15 +217,18 @@ def stream_reply(messages, system=None):
 
     if PROVIDER == "gemini":
         from google import genai
-        from google.genai import types as genai_types
 
         client = genai.Client()
-        for chunk in client.models.generate_content_stream(
+        # stream=True yields typed events; the text arrives in step.delta events
+        for event in client.interactions.create(
             model=CHAT_MODEL,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(system_instruction=system),
+            input=prompt,
+            # pass system_instruction only when set (None would be sent as JSON null)
+            **({"system_instruction": system} if system else {}),
+            stream=True,
         ):
-            yield chunk.text or ""
+            if event.event_type == "step.delta" and event.delta.type == "text":
+                yield event.delta.text
 
     elif PROVIDER == "openai":
         from openai import OpenAI
@@ -236,11 +239,6 @@ def stream_reply(messages, system=None):
         for event in stream:
             if event.type == "response.output_text.delta":
                 yield event.delta
-
-    else:
-        # Any other provider is configured through the toolkit
-        # (OpenAI-compatible endpoints); fall back to one non-streamed call.
-        yield generate(prompt, system=system)
 
 
 def generate_completion(query, history, memory):
